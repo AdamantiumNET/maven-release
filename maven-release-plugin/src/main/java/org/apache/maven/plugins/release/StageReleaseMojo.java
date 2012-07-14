@@ -144,7 +144,7 @@ public class StageReleaseMojo
 
             releaseDescriptor.setPerformGoals( goals );
 
-            releaseManager.perform( releaseDescriptor, getReleaseEnvironment(), getReactorProjects(), false );
+	        getReleaseManager().perform( releaseDescriptor, getReleaseEnvironment(), getReactorProjects(), false );
         }
         catch ( ReleaseExecutionException e )
         {

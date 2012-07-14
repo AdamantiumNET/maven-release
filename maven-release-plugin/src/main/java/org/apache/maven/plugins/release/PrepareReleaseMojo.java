@@ -274,7 +274,7 @@ public class PrepareReleaseMojo
 
         try
         {
-            releaseManager.prepare( config, getReleaseEnvironment(), getReactorProjects(), resume, dryRun );
+	        getReleaseManager().prepare( config, getReleaseEnvironment(), getReactorProjects(), resume, dryRun );
         }
         catch ( ReleaseExecutionException e )
         {

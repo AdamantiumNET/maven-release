@@ -48,7 +48,7 @@ public class CleanReleaseMojo
 
         ReleaseDescriptor releaseDescriptor = new ReleaseDescriptor();
         releaseDescriptor.setWorkingDirectory( getBasedir().getAbsolutePath() );
-        releaseManager.clean( releaseDescriptor, null, getReactorProjects() );
+	    getReleaseManager().clean( releaseDescriptor, null, getReactorProjects() );
     }
 
 }

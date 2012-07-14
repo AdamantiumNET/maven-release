@@ -19,11 +19,6 @@ package org.apache.maven.plugins.release;
  * under the License.
  */
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Profile;
 import org.apache.maven.plugin.AbstractMojo;
@@ -40,6 +35,11 @@ import org.apache.maven.shared.release.env.DefaultReleaseEnvironment;
 import org.apache.maven.shared.release.env.ReleaseEnvironment;
 import org.codehaus.plexus.util.StringUtils;
 
+import java.io.File;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Base class with shared configuration.
  *
@@ -47,356 +47,347 @@ import org.codehaus.plexus.util.StringUtils;
  * @version $Id$
  */
 public abstract class AbstractReleaseMojo
-    extends AbstractMojo
-{
-    /**
-     * The SCM username to use.
-     */
-    @Parameter( property = "username" )
-    private String username;
+		extends AbstractMojo {
+	/**
+	 * The SCM username to use.
+	 */
+	@Parameter(property = "username")
+	private String username;
 
-    /**
-     * The SCM password to use.
-     */
-    @Parameter( property = "password" )
-    private String password;
+	/**
+	 * The SCM password to use.
+	 */
+	@Parameter(property = "password")
+	private String password;
 
-    /**
-     * The SCM tag to use.
-     */
-    @Parameter( alias = "releaseLabel", property = "tag" )
-    private String tag;
+	/**
+	 * The SCM tag to use.
+	 */
+	@Parameter(alias = "releaseLabel", property = "tag")
+	private String tag;
 
-    /**
-     * Format to use when generating the tag name if none is specified. Property interpolation is performed on the
-     * tag, but in order to ensure that the interpolation occurs during release, you must use <code>@{...}</code>
-     * to reference the properties rather than <code>${...}</code>. The following properties are available:
-     * <ul>
-     *     <li><code>groupId</code> or <code>project.groupId</code> - The groupId of the root project.
-     *     <li><code>artifactId</code> or <code>project.artifactId</code> - The artifactId of the root project.
-     *     <li><code>version</code> or <code>project.version</code> - The release version of the root project.
-     * </ul>
-     *
-     * @since 2.2.0
-     */
-    @Parameter( defaultValue = "@{project.artifactId}-@{project.version}", property = "tagNameFormat" )
-    private String tagNameFormat;
+	/**
+	 * Format to use when generating the tag name if none is specified. Property interpolation is performed on the
+	 * tag, but in order to ensure that the interpolation occurs during release, you must use <code>@{...}</code>
+	 * to reference the properties rather than <code>${...}</code>. The following properties are available:
+	 * <ul>
+	 * <li><code>groupId</code> or <code>project.groupId</code> - The groupId of the root project.
+	 * <li><code>artifactId</code> or <code>project.artifactId</code> - The artifactId of the root project.
+	 * <li><code>version</code> or <code>project.version</code> - The release version of the root project.
+	 * </ul>
+	 *
+	 * @since 2.2.0
+	 */
+	@Parameter(defaultValue = "@{project.artifactId}-@{project.version}", property = "tagNameFormat")
+	private String tagNameFormat;
 
-    /**
-     * The tag base directory in SVN, you must define it if you don't use the standard svn layout (trunk/tags/branches).
-     * For example, <code>http://svn.apache.org/repos/asf/maven/plugins/tags</code>. The URL is an SVN URL and does not
-     * include the SCM provider and protocol.
-     */
-    @Parameter( property = "tagBase" )
-    private String tagBase;
+	/**
+	 * The tag base directory in SVN, you must define it if you don't use the standard svn layout (trunk/tags/branches).
+	 * For example, <code>http://svn.apache.org/repos/asf/maven/plugins/tags</code>. The URL is an SVN URL and does not
+	 * include the SCM provider and protocol.
+	 */
+	@Parameter(property = "tagBase")
+	private String tagBase;
 
-    /**
-     */
-    @Parameter( defaultValue = "${basedir}", readonly = true, required = true )
-    private File basedir;
+	/**
+	 */
+	@Parameter(defaultValue = "${basedir}", readonly = true, required = true)
+	private File basedir;
 
-    /**
-     */
-    @Component
-    private Settings settings;
+	/**
+	 */
+	@Component
+	private Settings settings;
 
-    /**
-     */
-    @Component
-    protected MavenProject project;
+	/**
+	 */
+	@Component
+	protected MavenProject project;
 
-    /**
-     */
-    @Component
-    protected ReleaseManager releaseManager;
+	/**
+	 */
+	@Component
+	protected ReleaseManager releaseManager;
 
-    /**
-     * Additional arguments to pass to the Maven executions, separated by spaces.
-     */
-    @Parameter( alias = "prepareVerifyArgs", property = "arguments" )
-    private String arguments;
+	/**
+	 * Additional arguments to pass to the Maven executions, separated by spaces.
+	 */
+	@Parameter(alias = "prepareVerifyArgs", property = "arguments")
+	private String arguments;
 
-    /**
-     * The file name of the POM to execute any goals against.
-     */
-    @Parameter( property = "pomFileName" )
-    private String pomFileName;
+	/**
+	 * The file name of the POM to execute any goals against.
+	 */
+	@Parameter(property = "pomFileName")
+	private String pomFileName;
 
-    /**
-     * The message prefix to use for all SCM changes.
-     *
-     * @since 2.0-beta-5
-     */
-    @Parameter( defaultValue = "[maven-release-plugin] ", property = "scmCommentPrefix" )
-    private String scmCommentPrefix;
+	/**
+	 * The message prefix to use for all SCM changes.
+	 *
+	 * @since 2.0-beta-5
+	 */
+	@Parameter(defaultValue = "[maven-release-plugin] ", property = "scmCommentPrefix")
+	private String scmCommentPrefix;
 
-    /**
-     */
-    @Parameter( defaultValue = "${reactorProjects}", readonly = true, required = true )
-    private List<MavenProject> reactorProjects;
+	/**
+	 */
+	@Parameter(defaultValue = "${reactorProjects}", readonly = true, required = true)
+	private List<MavenProject> reactorProjects;
 
-    /**
-     * Add a new or overwrite the default implementation per provider. 
-     * The key is the scm prefix and the value is the role hint of the {@link org.apache.maven.scm.provider.ScmProvider}.
-     *
-     * @since 2.0-beta-6
-     * @see ScmManager#setScmProviderImplementation(String, String)
-     */
-    @Parameter
-    private Map<String, String> providerImplementations;
+	/**
+	 * Add a new or overwrite the default implementation per provider.
+	 * The key is the scm prefix and the value is the role hint of the {@link org.apache.maven.scm.provider.ScmProvider}.
+	 *
+	 * @see ScmManager#setScmProviderImplementation(String, String)
+	 * @since 2.0-beta-6
+	 */
+	@Parameter
+	private Map<String, String> providerImplementations;
 
-    /**
-     * The {@code M2_HOME} parameter to use for forked Maven invocations.
-     *
-     * @since 2.0-beta-8
-     */
-    @Parameter( defaultValue = "${maven.home}" )
-    protected File mavenHome;
+	/**
+	 * The {@code M2_HOME} parameter to use for forked Maven invocations.
+	 *
+	 * @since 2.0-beta-8
+	 */
+	@Parameter(defaultValue = "${maven.home}")
+	protected File mavenHome;
 
-    /**
-     * The {@code JAVA_HOME} parameter to use for forked Maven invocations.
-     *
-     * @since 2.0-beta-8
-     */
-    @Parameter( defaultValue = "${java.home}" )
-    private File javaHome;
+	/**
+	 * The {@code JAVA_HOME} parameter to use for forked Maven invocations.
+	 *
+	 * @since 2.0-beta-8
+	 */
+	@Parameter(defaultValue = "${java.home}")
+	private File javaHome;
 
-    /**
-     * The command-line local repository directory in use for this build (if specified).
-     *
-     * @since 2.0-beta-8
-     */
-    @Parameter ( defaultValue = "${maven.repo.local}" )
-    private File localRepoDirectory;
+	/**
+	 * The command-line local repository directory in use for this build (if specified).
+	 *
+	 * @since 2.0-beta-8
+	 */
+	@Parameter(defaultValue = "${maven.repo.local}")
+	private File localRepoDirectory;
 
-    /**
-     * Role hint of the {@link org.apache.maven.shared.release.exec.MavenExecutor} implementation to use.
-     *
-     * @since 2.0-beta-8
-     */
-    @Parameter( defaultValue = "invoker", property = "mavenExecutorId" )
-    private String mavenExecutorId;
+	/**
+	 * Role hint of the {@link org.apache.maven.shared.release.exec.MavenExecutor} implementation to use.
+	 *
+	 * @since 2.0-beta-8
+	 */
+	@Parameter(defaultValue = "invoker", property = "mavenExecutorId")
+	private String mavenExecutorId;
 
-    /**
-     * Use a local checkout instead of doing a checkout from the upstream repository.
-     * ATTENTION: This will only work with distributed SCMs which support the file:// protocol
-     * like e.g. git, jgit or hg!
-     *
-     * TODO: we should think about having the defaults for the various SCM providers provided via modello!
-     *
-     * @since 2.0
-     */
-    @Parameter( defaultValue = "false", property = "localCheckout" )
-    private boolean localCheckout;
-    
-    /**
-     * Implemented with git will or not push changes to the upstream repository.
-     * <code>true</code> by default to preserve backward compatibility.
-     * @since 2.1
-     */
-    @Parameter( defaultValue = "true", property = "pushChanges" )
-    private boolean pushChanges = true;
+	/**
+	 * Role hint of the {@link org.apache.maven.shared.release.ReleaseManager} implementation to use.
+	 *
+	 * @since 2.4
+	 */
+	@Parameter(defaultValue = "default", property = "releaseManagerId")
+	private String releaseManagerId;
 
-    /**
-     * The SCM manager.
-     */
-    @Component
-    private ScmManager scmManager;
 
-    /**
-     * @since 2.0
-     */
-    @Component
-    protected MavenSession session;
+	@Component(role = ReleaseManager.class)
+	private Map<String, ReleaseManager> releaseManagers;
 
-    /**
-     * Gets the enviroment settings configured for this release.
-     *
-     * @return The release environment, never <code>null</code>.
-     */
-    protected ReleaseEnvironment getReleaseEnvironment()
-    {
-        return new DefaultReleaseEnvironment().setSettings( settings )
-                                              .setJavaHome( javaHome )
-                                              .setMavenHome( mavenHome )
-                                              .setLocalRepositoryDirectory( localRepoDirectory )
-                                              .setMavenExecutorId( mavenExecutorId );
-    }
+	/**
+	 * Use a local checkout instead of doing a checkout from the upstream repository.
+	 * ATTENTION: This will only work with distributed SCMs which support the file:// protocol
+	 * like e.g. git, jgit or hg!
+	 * <p/>
+	 * TODO: we should think about having the defaults for the various SCM providers provided via modello!
+	 *
+	 * @since 2.0
+	 */
+	@Parameter(defaultValue = "false", property = "localCheckout")
+	private boolean localCheckout;
 
-    /**
-     * {@inheritDoc}
-     */
-    public void execute()
-        throws MojoExecutionException, MojoFailureException
-    {
-        if ( providerImplementations != null )
-        {
-            for ( Map.Entry<String, String> providerEntry : providerImplementations.entrySet() )
-            {
-                getLog().info( "Change the default '" + providerEntry.getKey() + "' provider implementation to '"
-                    + providerEntry.getValue() + "'." );
-                scmManager.setScmProviderImplementation( providerEntry.getKey(), providerEntry.getValue() );
-            }
-        }
-    }
+	/**
+	 * Implemented with git will or not push changes to the upstream repository.
+	 * <code>true</code> by default to preserve backward compatibility.
+	 *
+	 * @since 2.1
+	 */
+	@Parameter(defaultValue = "true", property = "pushChanges")
+	private boolean pushChanges = true;
 
-    /**
-     * Creates the release descriptor from the various goal parameters.
-     *
-     * @return The release descriptor, never <code>null</code>.
-     */
-    protected ReleaseDescriptor createReleaseDescriptor()
-    {
-        ReleaseDescriptor descriptor = new ReleaseDescriptor();
+	/**
+	 * The SCM manager.
+	 */
+	@Component
+	private ScmManager scmManager;
 
-        descriptor.setInteractive( settings.isInteractiveMode() );
+	/**
+	 * @since 2.0
+	 */
+	@Component
+	protected MavenSession session;
 
-        descriptor.setScmPassword( password );
-        descriptor.setScmReleaseLabel( tag );
-        descriptor.setScmTagNameFormat( tagNameFormat );
-        descriptor.setScmTagBase( tagBase );
-        descriptor.setScmUsername( username );
-        descriptor.setScmCommentPrefix( scmCommentPrefix );
+	/**
+	 * Gets the enviroment settings configured for this release.
+	 *
+	 * @return The release environment, never <code>null</code>.
+	 */
+	protected ReleaseEnvironment getReleaseEnvironment() {
+		return new DefaultReleaseEnvironment().setSettings(settings)
+				.setJavaHome(javaHome)
+				.setMavenHome(mavenHome)
+				.setLocalRepositoryDirectory(localRepoDirectory)
+				.setMavenExecutorId(mavenExecutorId);
+	}
 
-        descriptor.setWorkingDirectory( basedir.getAbsolutePath() );
+	/**
+	 * {@inheritDoc}
+	 */
+	public void execute()
+			throws MojoExecutionException, MojoFailureException {
+		if (providerImplementations != null) {
+			for (Map.Entry<String, String> providerEntry : providerImplementations.entrySet()) {
+				getLog().info("Change the default '" + providerEntry.getKey() + "' provider implementation to '"
+						+ providerEntry.getValue() + "'.");
+				scmManager.setScmProviderImplementation(providerEntry.getKey(), providerEntry.getValue());
+			}
+		}
+	}
 
-        descriptor.setPomFileName( pomFileName );
+	/**
+	 * Creates the release descriptor from the various goal parameters.
+	 *
+	 * @return The release descriptor, never <code>null</code>.
+	 */
+	protected ReleaseDescriptor createReleaseDescriptor() {
+		ReleaseDescriptor descriptor = new ReleaseDescriptor();
 
-        descriptor.setLocalCheckout( localCheckout );
-        
-        descriptor.setPushChanges( pushChanges );
+		descriptor.setInteractive(settings.isInteractiveMode());
 
-        @SuppressWarnings("unchecked")
-        List<Profile> profiles = project.getActiveProfiles();
+		descriptor.setScmPassword(password);
+		descriptor.setScmReleaseLabel(tag);
+		descriptor.setScmTagNameFormat(tagNameFormat);
+		descriptor.setScmTagBase(tagBase);
+		descriptor.setScmUsername(username);
+		descriptor.setScmCommentPrefix(scmCommentPrefix);
 
-        String arguments = this.arguments;
-        if ( profiles != null && !profiles.isEmpty() )
-        {
-            if ( !StringUtils.isEmpty( arguments ) )
-            {
-                arguments += " -P ";
-            }
-            else
-            {
-                arguments = "-P ";
-            }
+		descriptor.setWorkingDirectory(basedir.getAbsolutePath());
 
-            for ( Iterator<Profile> it = profiles.iterator(); it.hasNext(); )
-            {
-                Profile profile = it.next();
+		descriptor.setPomFileName(pomFileName);
 
-                arguments += profile.getId();
-                if ( it.hasNext() )
-                {
-                    arguments += ",";
-                }
-            }
+		descriptor.setLocalCheckout(localCheckout);
 
-            String additionalProfiles = getAdditionalProfiles();
-            if ( additionalProfiles != null )
-            {
-                if ( !profiles.isEmpty() )
-                {
-                    arguments += ",";
-                }
-                arguments += additionalProfiles;
-            }
-        }
-        descriptor.setAdditionalArguments( arguments );
+		descriptor.setPushChanges(pushChanges);
 
-        return descriptor;
-    }
+		@SuppressWarnings("unchecked")
+		List<Profile> profiles = project.getActiveProfiles();
 
-    /**
-     * Gets the comma separated list of additional profiles for the release build.
-     *
-     * @return additional profiles to enable during release
-     */
-    protected String getAdditionalProfiles()
-    {
-        return null;
-    }
+		String arguments = this.arguments;
+		if (profiles != null && !profiles.isEmpty()) {
+			if (!StringUtils.isEmpty(arguments)) {
+				arguments += " -P ";
+			} else {
+				arguments = "-P ";
+			}
 
-    /**
-     * Sets the component used to perform release actions.
-     *
-     * @param releaseManager The release manager implementation to use, must not be <code>null</code>.
-     */
-    void setReleaseManager( ReleaseManager releaseManager )
-    {
-        this.releaseManager = releaseManager;
-    }
+			for (Iterator<Profile> it = profiles.iterator(); it.hasNext(); ) {
+				Profile profile = it.next();
 
-    /**
-     * Gets the effective settings for this build.
-     *
-     * @return The effective settings for this build, never <code>null</code>.
-     */
-    Settings getSettings()
-    {
-        return settings;
-    }
-    
-    protected final File getBasedir()
-    {
-        return basedir;
-    }
+				arguments += profile.getId();
+				if (it.hasNext()) {
+					arguments += ",";
+				}
+			}
 
-    /**
-     * Sets the base directory of the build.
-     *
-     * @param basedir The build's base directory, must not be <code>null</code>.
-     */
-    public void setBasedir( File basedir )
-    {
-        this.basedir = basedir;
-    }
+			String additionalProfiles = getAdditionalProfiles();
+			if (additionalProfiles != null) {
+				if (!profiles.isEmpty()) {
+					arguments += ",";
+				}
+				arguments += additionalProfiles;
+			}
+		}
+		descriptor.setAdditionalArguments(arguments);
 
-    /**
-     * Gets the list of projects in the build reactor.
-     *
-     * @return The list of reactor project, never <code>null</code>.
-     */
-    public List<MavenProject> getReactorProjects()
-    {
-        return reactorProjects;
-    }
+		return descriptor;
+	}
 
-    /**
-     * Add additional arguments.
-     *
-     * @param argument The argument to add, must not be <code>null</code>.
-     */
-    protected void addArgument( String argument )
-    {
-        if ( arguments != null )
-        {
-            arguments += " " + argument;
-        }
-        else
-        {
-            arguments = argument;
-        }
-    }
+	/**
+	 * Gets the comma separated list of additional profiles for the release build.
+	 *
+	 * @return additional profiles to enable during release
+	 */
+	protected String getAdditionalProfiles() {
+		return null;
+	}
 
-    /**
-     * This method takes some of the release configuration picked up from the command line system properties and copies
-     * it into the release config object.
-     *
-     * @param config The release configuration to merge the system properties into, must not be <code>null</code>.
-     * @param sysPropertiesConfig The configuration from the system properties to merge in, must not be
-     *            <code>null</code>.
-     */
-    protected void mergeCommandLineConfig( ReleaseDescriptor config, ReleaseDescriptor sysPropertiesConfig )
-    {
-        // If the user specifies versions, these should override the existing versions
-        if ( sysPropertiesConfig.getReleaseVersions() != null )
-        {
-            config.getReleaseVersions().putAll( sysPropertiesConfig.getReleaseVersions() );
-        }
-        if ( sysPropertiesConfig.getDevelopmentVersions() != null )
-        {
-            config.getDevelopmentVersions().putAll( sysPropertiesConfig.getDevelopmentVersions() );
-        }
-    }
+	/**
+	 * Sets the component used to perform release actions.
+	 *
+	 * @param releaseManager The release manager implementation to use, must not be <code>null</code>.
+	 */
+	void setReleaseManager(ReleaseManager releaseManager) {
+		this.releaseManager = releaseManager;
+	}
+
+	ReleaseManager getReleaseManager() {
+		final ReleaseManager releaseManager = releaseManagers.get(releaseManagerId);
+		return releaseManager != null ? releaseManager : this.releaseManager;
+	}
+
+	/**
+	 * Gets the effective settings for this build.
+	 *
+	 * @return The effective settings for this build, never <code>null</code>.
+	 */
+	Settings getSettings() {
+		return settings;
+	}
+
+	protected final File getBasedir() {
+		return basedir;
+	}
+
+	/**
+	 * Sets the base directory of the build.
+	 *
+	 * @param basedir The build's base directory, must not be <code>null</code>.
+	 */
+	public void setBasedir(File basedir) {
+		this.basedir = basedir;
+	}
+
+	/**
+	 * Gets the list of projects in the build reactor.
+	 *
+	 * @return The list of reactor project, never <code>null</code>.
+	 */
+	public List<MavenProject> getReactorProjects() {
+		return reactorProjects;
+	}
+
+	/**
+	 * Add additional arguments.
+	 *
+	 * @param argument The argument to add, must not be <code>null</code>.
+	 */
+	protected void addArgument(String argument) {
+		if (arguments != null) {
+			arguments += " " + argument;
+		} else {
+			arguments = argument;
+		}
+	}
+
+	/**
+	 * This method takes some of the release configuration picked up from the command line system properties and copies
+	 * it into the release config object.
+	 *
+	 * @param config              The release configuration to merge the system properties into, must not be <code>null</code>.
+	 * @param sysPropertiesConfig The configuration from the system properties to merge in, must not be
+	 *                            <code>null</code>.
+	 */
+	protected void mergeCommandLineConfig(ReleaseDescriptor config, ReleaseDescriptor sysPropertiesConfig) {
+		// If the user specifies versions, these should override the existing versions
+		if (sysPropertiesConfig.getReleaseVersions() != null) {
+			config.getReleaseVersions().putAll(sysPropertiesConfig.getReleaseVersions());
+		}
+		if (sysPropertiesConfig.getDevelopmentVersions() != null) {
+			config.getDevelopmentVersions().putAll(sysPropertiesConfig.getDevelopmentVersions());
+		}
+	}
 }

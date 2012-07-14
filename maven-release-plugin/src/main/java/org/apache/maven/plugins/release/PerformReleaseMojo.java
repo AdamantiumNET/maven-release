@@ -140,7 +140,7 @@ public class PerformReleaseMojo
             performRequest.setReactorProjects( getReactorProjects() );
             performRequest.setDryRun( dryRun );
 
-            releaseManager.perform( performRequest );
+	        getReleaseManager().perform( performRequest );
         }
         catch ( ReleaseExecutionException e )
         {

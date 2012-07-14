@@ -81,6 +81,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.maven.release</groupId>
+      <artifactId>radiumone-release-manager</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
       <version>${mavenVersion}</version>

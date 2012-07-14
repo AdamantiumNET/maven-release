@@ -96,7 +96,7 @@ public class UpdateVersionsMojo
 
         try
         {
-            releaseManager.updateVersions( config, getReleaseEnvironment(), getReactorProjects() );
+	        getReleaseManager().updateVersions( config, getReleaseEnvironment(), getReactorProjects() );
         }
         catch ( ReleaseExecutionException e )
         {
